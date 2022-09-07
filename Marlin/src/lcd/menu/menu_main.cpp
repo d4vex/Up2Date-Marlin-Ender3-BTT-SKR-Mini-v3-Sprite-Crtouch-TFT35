@@ -255,7 +255,6 @@ void menu_main() {
       #endif
 
       if (card_detected) {
-        SUBMENU(MSG_MEDIA_MENU, MEDIA_MENU_GATEWAY);
         if (!card_open) {
             ACTION_ITEM(MSG_RELEASE_MEDIA, []{              // M22 Release Media
               queue.inject(F("M22"));
@@ -265,7 +264,7 @@ void menu_main() {
                 ui.refresh(LCDVIEW_CALL_REDRAW_NEXT);
               #endif
             });
-                // Media Menu (or Password First)
+          SUBMENU(MSG_MEDIA_MENU, MEDIA_MENU_GATEWAY);      // Media Menu (or Password First)
         }
       }
       else {
