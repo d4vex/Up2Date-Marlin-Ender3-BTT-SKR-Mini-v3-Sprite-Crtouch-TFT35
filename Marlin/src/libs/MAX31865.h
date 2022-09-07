@@ -41,6 +41,8 @@
  */
 #pragma once
 
+//#define DEBUG_MAX31865
+
 #include "../inc/MarlinConfig.h"
 #include "../HAL/shared/Delay.h"
 #include HAL_PATH(../HAL, MarlinSPI.h)
@@ -71,33 +73,49 @@
 #define MAX31865_FAULT_RTDINLOW 0x08    // D3
 #define MAX31865_FAULT_OVUV 0x04        // D2
 
-// http://www.analog.com/media/en/technical-documentation/application-notes/AN709_0.pdf
-// constants for calculating temperature from the measured RTD resistance.
-#define RTD_Z1 -0.0039083
-#define RTD_Z2 0.00001758480889
-#define RTD_Z3 -0.0000000231
-#define RTD_Z4 -0.000001155
-
 typedef enum max31865_numwires {
   MAX31865_2WIRE = 0,
   MAX31865_3WIRE = 1,
   MAX31865_4WIRE = 0
 } max31865_numwires_t;
 
+#if DISABLED(MAX31865_USE_AUTO_MODE)
+  typedef enum one_shot_event : uint8_t {
+    SETUP_BIAS_VOLTAGE,
+    SETUP_1_SHOT_MODE,
+    READ_RTD_REG
+  } one_shot_event_t;
+#endif
+
 /* Interface class for the MAX31865 RTD Sensor reader */
 class MAX31865 {
 private:
   static SPISettings spiConfig;
 
-  TERN(LARGE_PINMAP, uint32_t, uint8_t) _sclk, _miso, _mosi, _cs;
+  TERN(LARGE_PINMAP, uint32_t, uint8_t) sclkPin, misoPin, mosiPin, cselPin;
 
-  #ifdef TARGET_LPC1768
-    uint8_t _spi_speed;
-  #else
-    uint16_t _spi_delay;
+  uint16_t spiDelay;
+
+  float resNormalizer, refRes, wireRes;
+
+  #if ENABLED(MAX31865_USE_READ_ERROR_DETECTION)
+    millis_t lastReadStamp = 0;
   #endif
 
-  float Rzero, Rref;
+  uint16_t lastRead = 0;
+  uint8_t lastFault = 0;
+
+  #if DISABLED(MAX31865_USE_AUTO_MODE)
+    millis_t nextEventStamp;
+    one_shot_event_t nextEvent;
+  #endif
+
+  #ifdef MAX31865_IGNORE_INITIAL_FAULTY_READS
+    uint8_t ignore_faults = MAX31865_IGNORE_INITIAL_FAULTY_READS;
+    uint16_t fixFault(uint16_t rtd);
+  #endif
+
+  uint8_t stdFlags = 0;
 
   void setConfig(uint8_t config, bool enable);
 
@@ -106,12 +124,26 @@ private:
   uint16_t readRegister16(uint8_t addr);
 
   void writeRegister8(uint8_t addr, uint8_t reg);
-  uint8_t spiTransfer(uint8_t addr);
+  void writeRegister16(uint8_t addr, uint16_t reg);
 
-  void softSpiBegin(const uint8_t spi_speed);
+  void softSpiInit();
+  void spiBeginTransaction();
+  uint8_t spiTransfer(uint8_t addr);
+  void spiEndTransaction();
+
+  void initFixedFlags(max31865_numwires_t wires);
+
+  void enable50HzFilter(bool b);
+  void enableBias();
+  void oneShot();
+  void resetFlags();
+
+  uint16_t readRawImmediate();
+
+  void runAutoFaultDetectionCycle();
 
 public:
-  #ifdef LARGE_PINMAP
+  #if ENABLED(LARGE_PINMAP)
     MAX31865(uint32_t spi_cs, uint8_t pin_mapping);
     MAX31865(uint32_t spi_cs, uint32_t spi_mosi, uint32_t spi_miso,
              uint32_t spi_clk, uint8_t pin_mapping);
@@ -121,20 +153,14 @@ public:
              int8_t spi_clk);
   #endif
 
-  void begin(max31865_numwires_t wires, float zero, float ref);
+  void begin(max31865_numwires_t wires, const_float_t zero_res, const_float_t ref_res, const_float_t wire_res);
 
   uint8_t readFault();
   void clearFault();
 
-  void setWires(max31865_numwires_t wires);
-  void autoConvert(bool b);
-  void enable50HzFilter(bool b);
-  void enableBias(bool b);
-  void oneShot();
-
   uint16_t readRaw();
   float readResistance();
   float temperature();
-  float temperature(uint16_t adcVal);
-  float temperature(float Rrtd);
+  float temperature(const uint16_t adc_val);
+  float temperature(float rtd_res);
 };
