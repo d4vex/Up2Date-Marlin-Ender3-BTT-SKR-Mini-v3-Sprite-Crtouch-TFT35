@@ -600,9 +600,9 @@
     #define DEFAULT_Ki_LIST {   1.08,   1.08 }
     #define DEFAULT_Kd_LIST { 114.00, 114.00 }
   #else
-    #define DEFAULT_Kp  18.39
-    #define DEFAULT_Ki   1.34
-    #define DEFAULT_Kd  62.88
+    #define DEFAULT_Kp  21.73
+    #define DEFAULT_Ki   1.54
+    #define DEFAULT_Kd  76.55
   #endif
 #endif // PIDTEMP
 
@@ -2472,9 +2472,9 @@
 // (For CR-10 owners who want to replace the Melzi Creality board but retain the display)
 //
 #define CR10_STOCKDISPLAY
-//#if ENABLED(CR10_STOCKDISPLAY)
-//  #define RET6_12864_LCD  // Specific to the SoC (can either be RET / VET)
-//#endif							  
+#if ENABLED(CR10_STOCKDISPLAY)
+ #define RET6_12864_LCD  // Specific to the SoC (can either be RET / VET)
+#endif							  
 
 //
 // Ender-2 OEM display, a variant of the MKS_MINI_12864
