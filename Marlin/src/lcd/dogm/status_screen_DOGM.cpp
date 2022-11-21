@@ -464,7 +464,7 @@ FORCE_INLINE void _draw_axis_value(const AxisEnum axis, const char *value, const
     static u8g_uint_t remaining_x_pos = 0;
     void MarlinUI::drawRemain() {
       if (printJobOngoing()){
-        lcd_put_u8str(PROGRESS_BAR_X, EXTRAS_BASELINE, F("R:"));
+        lcd_put_u8str(PROGRESS_BAR_X, EXTRAS_BASELINE, F("RMT:"));
         lcd_put_u8str(remaining_x_pos, EXTRAS_BASELINE, remaining_string);
       }
     }
@@ -474,7 +474,7 @@ FORCE_INLINE void _draw_axis_value(const AxisEnum axis, const char *value, const
     static u8g_uint_t interaction_x_pos = 0;
     void MarlinUI::drawInter() {
       if (printingIsActive() && interaction_string[0]) {
-        lcd_put_u8str(PROGRESS_BAR_X, EXTRAS_BASELINE, F("C:"));
+        lcd_put_u8str(PROGRESS_BAR_X, EXTRAS_BASELINE, F("INT:"));
         lcd_put_u8str(interaction_x_pos, EXTRAS_BASELINE, interaction_string);
       }
     }
@@ -485,7 +485,7 @@ FORCE_INLINE void _draw_axis_value(const AxisEnum axis, const char *value, const
     static uint8_t lastElapsed;
     void MarlinUI::drawElapsed() {
       if (printJobOngoing()) {
-        lcd_put_u8str(PROGRESS_BAR_X, EXTRAS_BASELINE, F("E:"));
+        lcd_put_u8str(PROGRESS_BAR_X, EXTRAS_BASELINE, F("ELT:"));
         lcd_put_u8str(elapsed_x_pos, EXTRAS_BASELINE, elapsed_string);
       }
     }
